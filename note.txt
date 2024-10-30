@@ -1,0 +1,5 @@
+npm init 
+npm install -save-dev nodemon
+
+npm install mongodb --save
+npm install express --save

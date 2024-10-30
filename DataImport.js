@@ -1,0 +1,301 @@
+import express from "express";
+import asyncHandler from "express-async-handler";
+import order from "./data/data.js";
+import Orders from "./Models/ordersModel.js";
+import ProductOrders from "./Models/productOrdersModel.js";
+import news from "./data/news.js";
+import News from "./Models/newsModel.js";
+import Customer from "./Models/customerModel.js";
+import Category from "./Models/categoriesModel.js";
+import Product from "./Models/productsModel.js";
+import { scrapeAndDisplayCategories, scrapeAllProductData } from "./controllers/sitemapController.js";
+
+const ImportData = express.Router();
+
+// Xử lí data
+
+const getProductIds = async (products) => {
+  const productIds = await Promise.all(products.map(async (product) => {
+    let existingProduct = await ProductOrders.findOne({
+      productName: product.name,
+      imageURL: product.image // Sửa lại thành imageURL
+    });    
+
+    if (!existingProduct) {
+      console.warn(`Product not found: ${product.name}, ${product.image}`); // Cảnh báo thay vì ném lỗi
+      return null; // Trả về null nếu không tìm thấy sản phẩm
+    }
+
+    return existingProduct._id;
+  }));
+
+  return productIds.filter(id => id !== null); // Lọc ra các giá trị null trước khi trả về
+};
+
+
+
+const formatOrders = async (orderData) => {
+  // Xử lý từng đơn hàng trong danh sách
+  const formattedOrders = await Promise.all(orderData.map(async (order) => {
+    // Tìm kiếm hoặc tạo mới Customer
+    let customer = await Customer.findOne({
+      name_customer: order.customer?.name,
+      phone: order.customer?.phone
+    });
+
+    if (!customer) {
+      throw new Error(`Customer not found: ${order.customer?.name}, ${order.customer?.phone}`);
+    }
+
+    // Gọi hàm getProductIds để lấy danh sách các ObjectId của sản phẩm
+    const productsIds = await getProductIds(order.products);
+
+    // Định dạng lại đơn hàng để chuẩn bị lưu vào MongoDB
+    return {
+      codeOrder: order.code || `Order_${Date.now()}`, // Mã đơn hàng mặc định nếu thiếu
+      orderDate: order.accept_produce_at || Date.now(), // Ngày đặt hàng
+      statusOrder: order.status?.text || "Đang xử lý", // Trạng thái mặc định
+      totalAmount: order.totalMoneyAfterVATorDiscount || 0, // Tổng tiền mặc định nếu thiếu
+      customer: customer._id, // ObjectId của khách hàng
+      products: productsIds // Danh sách ObjectId của sản phẩm
+    };
+  }));
+
+  return formattedOrders; // Trả về danh sách đơn hàng đã được định dạng
+};
+
+ImportData.post(
+  "/order",
+  asyncHandler(async (req, res) => {
+    await Orders.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Orders'
+
+    // Gọi hàm formatOrders để định dạng các đơn hàng
+    const formattedOrders = await formatOrders(order);
+
+    // Thêm dữ liệu đã định dạng vào collection Orders
+    const importOrders = await Orders.insertMany(formattedOrders);
+
+    res.send({ importOrders });
+  })
+);
+
+
+//
+
+ImportData.post(
+  "/new",
+  asyncHandler(async (req, res) => {
+    await News.deleteMany({});
+    const importNews = await News.insertMany(news);
+    res.send({ importNews });
+  })
+);
+
+
+ImportData.post(
+  "/productOrder",
+  asyncHandler(async (req, res) => {
+    try {
+      // Xóa toàn bộ dữ liệu cũ trong collection 'ProductOrders'
+      await ProductOrders.deleteMany({});
+
+      // Duyệt qua các đơn hàng và xử lý sản phẩm
+      const formattedProductOrders = [];
+
+      order.forEach((order) => {
+        // Kiểm tra xem order.products có tồn tại và là một mảng không
+        if (Array.isArray(order.products)) {
+          order.products.forEach((product) => {
+            // Kiểm tra sự tồn tại của các thuộc tính cần thiết
+            if (product && product.name && product.money !== undefined) {
+              formattedProductOrders.push({
+                productName: product.name || "Product name",
+                price: product.money || 0,
+                imageURL: product.image || "No image",
+                color: product.color || "No color",
+                material: product.material?.name || "No material",
+                quantity: product.number || 0,
+              });
+            } else {
+              console.warn(`Sản phẩm không hợp lệ: ${JSON.stringify(product)}`);
+            }
+          });
+        } else {
+          console.warn(`Không có sản phẩm hợp lệ trong đơn hàng: ${JSON.stringify(order)}`);
+        }
+      });
+
+      // Thêm dữ liệu đã định dạng vào collection 'ProductOrders'
+      const importProductOrders = await ProductOrders.insertMany(formattedProductOrders);
+      res.send({ importProductOrders });
+    } catch (error) {
+      console.error("Lỗi khi import ProductOrders:", error);
+      res.status(500).send("Có lỗi xảy ra trong quá trình import sản phẩm.");
+    }
+  })
+);
+
+ImportData.post(
+  "/customer",
+  asyncHandler(async (req, res) => {
+    await Customer.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Customer'
+    const formattedCustomers = order.map(order => ({
+      name_customer: order.customer?.name || `Customer_${Date.now()}`, // Nếu thiếu name_customer, dùng một giá trị mặc định
+      email: order.customer?.email || "email@default.com", // Nếu thiếu email, dùng giá trị mặc định
+      phone: order.customer?.phone || "0000000000", // Nếu thiếu phone, dùng giá trị mặc định
+      sex: order.customer?.sex ?? true, // Nếu thiếu sex, dùng giá trị mặc định true (nam)
+      registrationDate: order.customer?.registrationDate || Date.now(), // Dùng ngày hiện tại nếu thiếu
+      customerCode: order.customer?.customerCode || `CODE_${Date.now()}`, // Nếu thiếu, tạo một mã mặc định
+    }));
+
+    // Thêm dữ liệu đã định dạng vào collection Customers
+    const importCustomers = await Customer.insertMany(formattedCustomers);
+
+    res.send({ importCustomers });
+  })
+);
+
+
+
+
+// ImportData.post(
+//   "/order",
+//   asyncHandler(async (req, res) => {
+//     await Orders.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Orders'
+
+//     const formattedOrders = await Promise.all(order.map(async (order) => {
+
+//       // Tìm kiếm hoặc tạo mới Customer
+//       let customer = await Customer.findOne({
+//         name_customer: order.customer?.name,
+//         phone: order.customer?.phone
+//       });
+
+//       if (!customer ) {
+//         throw new Error(`Product not found: ${order.customer?.name}, ${order.customer?.phone}`);
+//       }
+
+//       // if (!customer) {
+//       //   customer = await Customer.create({
+//       //     name_customer: order.customer?.name || `Customer_${Date.now()}`, // Mặc định nếu thiếu name
+//       //     phone: order.customer?.phone || "Unknown", // Mặc định nếu thiếu phone
+//       //     customerCode: `CODE_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
+//       //   });
+//       // }
+
+    
+       
+
+//         // Tìm kiếm sản phẩm trong database dựa trên tên và hình ảnh (hoặc các thuộc tính khác)
+//         let product = await ProductOrders.findOne({
+//           name: order.product?.name,
+//           image: order.product?.image,
+//         });
+
+//         if (!product ) {
+//           throw new Error(`Product not found: ${order.product?.name}, ${order.product?.image}`);
+//         }
+
+     
+  
+
+//       return {
+//         codeOrder: order.code || `Order_${Date.now()}`, // Mặc định nếu thiếu mã đơn hàng
+//         orderDate: order.accept_produce_at || Date.now(), // Ngày hiện tại nếu thiếu
+//         statusOrder: order.status?.text || "Đang xử lý", // Trạng thái mặc định
+//         totalAmount: order.totalMoneyAfterVATorDiscount || 0, // Giá trị mặc định
+//         customer: customer._id, // Lấy ObjectId của customer để lưu vào order
+//         products: product._id // Thêm các ObjectId của sản phẩm
+//       };
+//     }));
+
+//     // Thêm dữ liệu đã định dạng vào collection Orders
+//     const importOrders = await Orders.insertMany(formattedOrders);
+
+//     res.send({ importOrders });
+//   })
+// );
+
+
+
+
+ImportData.post(
+  "/categories",
+  asyncHandler(async (req, res) => {
+    // Lấy danh sách các danh mục từ hàm scrape
+    const categories = await scrapeAndDisplayCategories();
+
+    // Xóa toàn bộ danh mục cũ trong database trước khi import
+    await Category.deleteMany({});
+
+    // Tạo dữ liệu danh mục mới từ danh sách đã scrape
+    const categoriesToImport = categories.map((categoryName) => ({
+      categoryName,
+    }));
+
+    console.log(categoriesToImport);
+
+    // Import danh mục vào MongoDB
+    const importedCategories = await Category.insertMany(categoriesToImport);
+
+    res.send({ importedCategories });
+  })
+);
+
+
+// **Route mới** để scrape và import toàn bộ dữ liệu sản phẩm từ sitemap vào MongoDB
+ImportData.post(
+  "/products",
+  asyncHandler(async (req, res) => {
+    try {
+      // 1. Scrape toàn bộ dữ liệu sản phẩm từ sitemap
+      const scrapedProducts = await scrapeAllProductData();
+
+      if (scrapedProducts.length === 0) {
+        return res.status(400).send("Không có sản phẩm nào được scrape.");
+      }
+
+      // 2. Xóa toàn bộ dữ liệu sản phẩm cũ trong database
+      await Product.deleteMany({});
+
+      const productsToImport = [];
+
+      // 3. Duyệt qua từng sản phẩm đã scrape để chuẩn bị dữ liệu
+      for (const scrapedProduct of scrapedProducts) {
+        const { productName, productDescription, imageProduct, productCategory } = scrapedProduct;
+
+        // 4. Tìm `category` từ `productCategory` đã scrape
+        const category = await Category.findOne({ categoryName: productCategory });
+
+        if (!category) {
+          console.log(`Category not found for product: ${productName}. Skipping...`);
+          continue; // Nếu không tìm thấy category, bỏ qua sản phẩm này
+        }
+
+        // 5. Tạo đối tượng `Product` mới với schema yêu cầu
+        const newProduct = {
+          category: category._id, // Sử dụng `_id` của Category từ MongoDB
+          productName,
+          imageURL: imageProduct.length > 0 ? imageProduct : "No image", // Lấy hình ảnh đầu tiên làm `imageURL`
+          description: productDescription,
+        };
+
+        productsToImport.push(newProduct);
+      }
+
+      // 6. Import toàn bộ sản phẩm vào MongoDB
+      const importedProducts = await Product.insertMany(productsToImport);
+
+      console.log("Sản phẩm đã được import thành công:", importedProducts);
+      res.send({ importedProducts });
+    } catch (error) {
+      console.error("Lỗi khi scrape và import sản phẩm:", error);
+      res.status(500).send("Có lỗi xảy ra trong quá trình import sản phẩm.");
+    }
+  })
+);
+
+
+export default ImportData;
+
+
