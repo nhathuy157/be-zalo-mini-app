@@ -14,7 +14,7 @@ const vietnameseMapping = {
   'quan cafe': 'Quán Cafe',
   'barber': 'Barber',
   'studio' : 'Studio',
-  'phu kien dong phuc': 'Phụ Kiện Đồng Phục',
+  'phu kien dong phuc': 'Phụ Kiện',
 };
 
 // Hàm định dạng lại tên danh mục từ dạng 'dong-phuc-doanh-nghiep' thành 'Doanh Nghiệp'

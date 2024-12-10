@@ -70,7 +70,7 @@ productRouter.post(
     asyncHandler(async (req, res) => {
         const { category,
             productName,
-            imageURL,
+            image,
             description,
         } = req.body;
 
@@ -82,7 +82,7 @@ productRouter.post(
             const product= new Product({
                 category,
                 productName,
-                imageURL,
+                image,
                 description,
             });
             const createdProduct = await product.save();
@@ -103,13 +103,13 @@ productRouter.put(
     asyncHandler(async (req, res) => {
         const { category,
             productName,
-            imageURL,
+            image,
             description, } = req.body;
         const product = await Product.findById(req.params.id);
         if (product) {            
             product.category = category || product.category;
             product.productName = productName || product.productName;
-            product.imageURL = imageURL || product.imageURL;
+            product.image = image || product.image;
             product.description = description || product.description;
             
             const updatedProduct = await product.save();

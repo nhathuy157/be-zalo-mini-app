@@ -55,7 +55,7 @@ newsRouter.post(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const { title, description, imageURL } = req.body;
+        const { title, description, image } = req.body;
 
         const newsExist = await News.findOne({ title });
         if (newsExist) {
@@ -65,7 +65,7 @@ newsRouter.post(
             const news = new News({
                 title,
                 description,
-                imageURL,
+                image,
             });
             const createdNews = await news.save();
             res.status(201).json(createdNews);
@@ -79,12 +79,12 @@ newsRouter.put(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const { title, description, imageURL } = req.body;
+        const { title, description, image } = req.body;
         const news = await News.findById(req.params.id);
         if (news) {            
             news.title = title || news.title;
             news.description = description || news.description;
-            news.imageURL = imageURL || news.imageURL;
+            news.image = image || news.image;
             const updatedNews = await news.save();
             res.json(updatedNews);
         } else {

@@ -2,6 +2,7 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import order from "./data/data.js";
 import Orders from "./Models/ordersModel.js";
+import Consultants from "./Models/consultantsModel.js";
 import ProductOrders from "./Models/productOrdersModel.js";
 import news from "./data/news.js";
 import News from "./Models/newsModel.js";
@@ -18,7 +19,7 @@ const getProductIds = async (products) => {
   const productIds = await Promise.all(products.map(async (product) => {
     let existingProduct = await ProductOrders.findOne({
       productName: product.name,
-      imageURL: product.image // Sửa lại thành imageURL
+      image: product.image // Sửa lại thành image
     });    
 
     if (!existingProduct) {
@@ -31,6 +32,24 @@ const getProductIds = async (products) => {
 
   return productIds.filter(id => id !== null); // Lọc ra các giá trị null trước khi trả về
 };
+//Nhân viên phụ trách đơn
+// const getConsultantIds = async (consultant) => {
+//   const consultantIds = await Promise.all(consultant.map(async (consultant) => {
+//     let existingConsultant = await Consultants.findOne({
+//       name :consultant.name,
+//       phone: consultant.phone,
+//     });    
+
+//     if (!existingProduct) {
+//       console.warn(`Product not found: ${consultant.name}, ${consultant.phone}`); // Cảnh báo thay vì ném lỗi
+//       return null; // Trả về null nếu không tìm thấy sản phẩm
+//     }
+
+//     return existingConsultant._id;
+//   }));
+
+//   return consultantIds.filter(id => id !== null); // Lọc ra các giá trị null trước khi trả về
+// };
 
 
 
@@ -43,6 +62,15 @@ const formatOrders = async (orderData) => {
       phone: order.customer?.phone
     });
 
+    let consultant = await Consultants.findOne({
+      name_consultants: order.customer?.assign.first_name,
+      phone: order.customer?.assign.phone
+    });
+
+    if (!consultant) {
+      throw new Error(`Customer not found: ${order.customer?.assign.first_name}, ${order.customer?.assign.phone}`);
+    }
+
     if (!customer) {
       throw new Error(`Customer not found: ${order.customer?.name}, ${order.customer?.phone}`);
     }
@@ -50,12 +78,17 @@ const formatOrders = async (orderData) => {
     // Gọi hàm getProductIds để lấy danh sách các ObjectId của sản phẩm
     const productsIds = await getProductIds(order.products);
 
+ 
+
     // Định dạng lại đơn hàng để chuẩn bị lưu vào MongoDB
     return {
       codeOrder: order.code || `Order_${Date.now()}`, // Mã đơn hàng mặc định nếu thiếu
       orderDate: order.accept_produce_at || Date.now(), // Ngày đặt hàng
       statusOrder: order.status?.text || "Đang xử lý", // Trạng thái mặc định
-      totalAmount: order.totalMoneyAfterVATorDiscount || 0, // Tổng tiền mặc định nếu thiếu
+      totalAmount: order.totalMoney || 0, // Tổng tiền
+      VAT: order.totalVAT || 0, //VAT
+      totalAccountAll: order.totalAccountAll || 0, // tiền cọc
+      consultant : consultant._id,
       customer: customer._id, // ObjectId của khách hàng
       products: productsIds // Danh sách ObjectId của sản phẩm
     };
@@ -76,6 +109,26 @@ ImportData.post(
     const importOrders = await Orders.insertMany(formattedOrders);
 
     res.send({ importOrders });
+  })
+);
+
+ImportData.post(
+  "/consultant",
+  asyncHandler(async (req, res) => {
+    await Consultants.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Customer'
+    const formattedConsultants = order.map(order => ({
+      name_consultants: order.customer?.assign.first_name || `Customer_${Date.now()}`, // Nếu thiếu name_customer, dùng một giá trị mặc định
+      email: order.customer?.assign.email || "email@default.com", // Nếu thiếu email, dùng giá trị mặc định
+      phone: order.customer?.assign.phone || "0000000000", // Nếu thiếu phone, dùng giá trị mặc định
+      // Nếu thiếu sex, dùng giá trị mặc định true (nam)
+      facebook: order.customer?.assign.facebook || "https://www.facebook.com/" // Dùng ngày hiện tại nếu thiếu
+      // Nếu thiếu, tạo một mã mặc định
+    }));
+
+    // Thêm dữ liệu đã định dạng vào collection Customers
+    const importConsultants = await Consultants.insertMany(formattedConsultants);
+
+    res.send({ importConsultants });
   })
 );
 
@@ -111,7 +164,7 @@ ImportData.post(
               formattedProductOrders.push({
                 productName: product.name || "Product name",
                 price: product.money || 0,
-                imageURL: product.image || "No image",
+                image: product.image || "No image",
                 color: product.color || "No color",
                 material: product.material?.name || "No material",
                 quantity: product.number || 0,
@@ -158,63 +211,7 @@ ImportData.post(
 
 
 
-// ImportData.post(
-//   "/order",
-//   asyncHandler(async (req, res) => {
-//     await Orders.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Orders'
 
-//     const formattedOrders = await Promise.all(order.map(async (order) => {
-
-//       // Tìm kiếm hoặc tạo mới Customer
-//       let customer = await Customer.findOne({
-//         name_customer: order.customer?.name,
-//         phone: order.customer?.phone
-//       });
-
-//       if (!customer ) {
-//         throw new Error(`Product not found: ${order.customer?.name}, ${order.customer?.phone}`);
-//       }
-
-//       // if (!customer) {
-//       //   customer = await Customer.create({
-//       //     name_customer: order.customer?.name || `Customer_${Date.now()}`, // Mặc định nếu thiếu name
-//       //     phone: order.customer?.phone || "Unknown", // Mặc định nếu thiếu phone
-//       //     customerCode: `CODE_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`
-//       //   });
-//       // }
-
-    
-       
-
-//         // Tìm kiếm sản phẩm trong database dựa trên tên và hình ảnh (hoặc các thuộc tính khác)
-//         let product = await ProductOrders.findOne({
-//           name: order.product?.name,
-//           image: order.product?.image,
-//         });
-
-//         if (!product ) {
-//           throw new Error(`Product not found: ${order.product?.name}, ${order.product?.image}`);
-//         }
-
-     
-  
-
-//       return {
-//         codeOrder: order.code || `Order_${Date.now()}`, // Mặc định nếu thiếu mã đơn hàng
-//         orderDate: order.accept_produce_at || Date.now(), // Ngày hiện tại nếu thiếu
-//         statusOrder: order.status?.text || "Đang xử lý", // Trạng thái mặc định
-//         totalAmount: order.totalMoneyAfterVATorDiscount || 0, // Giá trị mặc định
-//         customer: customer._id, // Lấy ObjectId của customer để lưu vào order
-//         products: product._id // Thêm các ObjectId của sản phẩm
-//       };
-//     }));
-
-//     // Thêm dữ liệu đã định dạng vào collection Orders
-//     const importOrders = await Orders.insertMany(formattedOrders);
-
-//     res.send({ importOrders });
-//   })
-// );
 
 
 
@@ -276,7 +273,7 @@ ImportData.post(
         const newProduct = {
           category: category._id, // Sử dụng `_id` của Category từ MongoDB
           productName,
-          imageURL: imageProduct.length > 0 ? imageProduct : "No image", // Lấy hình ảnh đầu tiên làm `imageURL`
+          image: imageProduct.length > 0 ? imageProduct : "No image", // Lấy hình ảnh đầu tiên làm `image`
           description: productDescription,
         };
 

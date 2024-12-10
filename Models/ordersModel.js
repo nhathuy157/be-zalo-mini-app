@@ -26,7 +26,20 @@ const ordersSchema = new mongoose.Schema({
         type: [mongoose.Schema.Types.ObjectId],
         required: true,
         ref: "ProductOrders"
-    }
+    },
+    consultant: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "Consultants"
+    },
+    totalAccountAll: {
+        type: Number,
+        required: true
+    },
+    VAT : {
+        type: Number,
+        required: true
+    } 
 }, {
     timestamps: true
 });

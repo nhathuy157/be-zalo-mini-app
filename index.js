@@ -90,6 +90,7 @@ app.use("/api/v1/order", orderRouter);
 app.use("/api/v1/customer", customerRouter);
 app.use("/api/v1/productOrder", productOrderRouter);
 app.use("/api/v1/products", productsRouter);
+app.use("/api/v1/consultant", productsRouter);
 
 
 

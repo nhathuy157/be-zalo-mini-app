@@ -1,17 +1,17 @@
 import mongoose from "mongoose";
 
 const consultantsSchema = new mongoose.Schema({
-    name: {
+    name_consultants: {
         type: String,
-        required: true
-    },
-    phone: {
-        type:  String,
-        required: true
+        required: true // Trường này vẫn bắt buộc
     },
     email: {
         type: String,
-        required: true
+        required: false // Không bắt buộc
+    },
+    phone: {
+        type: String,
+        required: true // Vẫn bắt buộc
     },
     facebook: {
         type: String,

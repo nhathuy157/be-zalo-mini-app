@@ -75,7 +75,7 @@ productOrderRouter.post(
         const {
             productName,
             color,
-            imageURL,
+            image,
             price,
             material,
             quantity,
@@ -89,7 +89,7 @@ productOrderRouter.post(
             const productOrder = new ProductOrder({
                 productName,
                 color,
-                imageURL,
+                image,
                 price,
                 material,
                 quantity,
@@ -113,7 +113,7 @@ productOrderRouter.put(
         const {
             productName,
             color,
-            imageURL,
+            image,
             price,
             material,
             quantity,
@@ -122,7 +122,7 @@ productOrderRouter.put(
         if (productOrder) {
             productOrder.productName = productName || productOrder.productName;
             productOrder.color = color || productOrder.color;
-            productOrder.imageURL = imageURL || productOrder.imageURL;
+            productOrder.image = image || productOrder.image;
             productOrder.price = price || productOrder.price;
             productOrder.material = material || productOrder.material;
             productOrder.quantity = quantity || productOrder.quantity;
