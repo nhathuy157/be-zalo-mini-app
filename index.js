@@ -12,6 +12,7 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import { notFound, errorHandler } from './Middleware/Errors.js';
 import { scrapeAndDisplayCategories, scrapeAllProductData } from './controllers/sitemapController.js'
 import { getOderInfo } from './controllers/apiController.js';
+import bannerRouter from "./Routes/bannerRouter.js";
 
 
 
@@ -84,6 +85,7 @@ app.post('/api/getOrderInfo', getOderInfo);
 
 //API 
 app.use("/api/v1/import", DataImport);
+app.use("/api/v1/banners", bannerRouter);
 app.use("/api/v1/news", newsRouter);
 app.use("/api/v1/categories", categoriesRouter);
 app.use("/api/v1/order", orderRouter);

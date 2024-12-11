@@ -1,6 +1,7 @@
 import express from "express";
 import asyncHandler from "express-async-handler";
 import order from "./data/data.js";
+import banners from "./data/banners.js";
 import Orders from "./Models/ordersModel.js";
 import Consultants from "./Models/consultantsModel.js";
 import ProductOrders from "./Models/productOrdersModel.js";
@@ -9,6 +10,7 @@ import News from "./Models/newsModel.js";
 import Customer from "./Models/customerModel.js";
 import Category from "./Models/categoriesModel.js";
 import Product from "./Models/productsModel.js";
+import Banner  from "./Models/bannerModel.js";
 import { scrapeAndDisplayCategories, scrapeAllProductData } from "./controllers/sitemapController.js";
 
 const ImportData = express.Router();
@@ -143,6 +145,25 @@ ImportData.post(
     res.send({ importNews });
   })
 );
+
+
+
+// Import danh sách banner
+ImportData.post(
+  "/banner",
+  asyncHandler(async (req, res) => {
+    // Xóa toàn bộ banner cũ
+    await Banner.deleteMany({});
+
+    // Chuẩn bị dữ liệu và import
+    const bannerData = banners.map((url) => ({ image: url }));
+    const importedBanners = await Banner.insertMany(bannerData);
+
+    res.status(201).json({ importedBanners });
+  })
+);
+
+
 
 
 ImportData.post(
