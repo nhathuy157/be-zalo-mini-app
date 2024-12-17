@@ -140,28 +140,31 @@ productRouter.delete(
 ); 
 
 /**
- * Get products by category ID
+ * Get products by category ID and pagination
  */
 productRouter.get(
-    "/",
+    "/", // Dùng route chính để lọc theo query
     asyncHandler(async (req, res) => {
         const pageSize = 12;
         const page = Number(req.query.pageNumber) || 1;
-        const keyword = req.query.keyword
-            ? {
-                name: {
-                    $regex: req.query.keyword,
-                    $options: "i",
-                },
-            }
-            : {};
-        
-        // Lọc theo category nếu có tham số categoryId
-        const categoryId = req.query.categoryId ? { category: req.query.categoryId } : {};
 
-        // Kết hợp tất cả các điều kiện (tìm theo keyword và category)
-        const count = await Product.countDocuments({ ...keyword, ...categoryId });
-        const products = await Product.find({ ...keyword, ...categoryId })
+        // Lấy query parameters từ request
+        const { type, keyword } = req.query;
+
+        // Query để lọc theo category ID
+        let filter = {};
+
+        if (type) {
+            filter.category = type; // Nếu có type (categoryId), lọc theo category
+        }
+
+        if (keyword) {
+            filter.name = { $regex: keyword, $options: "i" }; // Nếu có keyword, tìm theo tên
+        }
+
+        // Thực hiện truy vấn
+        const count = await Product.countDocuments({ ...filter });
+        const products = await Product.find({ ...filter })
             .limit(pageSize)
             .skip(pageSize * (page - 1));
 
