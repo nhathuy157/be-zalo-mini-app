@@ -139,6 +139,37 @@ productRouter.delete(
     })
 ); 
 
+/**
+ * Get products by category ID
+ */
+productRouter.get(
+    "/",
+    asyncHandler(async (req, res) => {
+        const pageSize = 12;
+        const page = Number(req.query.pageNumber) || 1;
+        const keyword = req.query.keyword
+            ? {
+                name: {
+                    $regex: req.query.keyword,
+                    $options: "i",
+                },
+            }
+            : {};
+        
+        // Lọc theo category nếu có tham số categoryId
+        const categoryId = req.query.categoryId ? { category: req.query.categoryId } : {};
+
+        // Kết hợp tất cả các điều kiện (tìm theo keyword và category)
+        const count = await Product.countDocuments({ ...keyword, ...categoryId });
+        const products = await Product.find({ ...keyword, ...categoryId })
+            .limit(pageSize)
+            .skip(pageSize * (page - 1));
+
+        res.json({ products, page, pages: Math.ceil(count / pageSize) });
+    })
+);
+
+
 
 export default productRouter;
 
