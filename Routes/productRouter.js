@@ -5,44 +5,44 @@ import { admin, protect } from "../Middleware/AuthMiddleware.js";
 
 const productRouter = express.Router();
 
-productRouter.get(
-    "/",
-    asyncHandler(async (req, res) => {
-        const pageSize = 12;
-        const page = Number(req.query.pageNumber) || 1;
+// productRouter.get(
+//     "/",
+//     asyncHandler(async (req, res) => {
+//         const pageSize = 12;
+//         const page = Number(req.query.pageNumber) || 1;
 
-        // Điều kiện lọc theo category ID (nếu có)
-        const categoryFilter = req.query.type
-            ? { category: req.query.type } // category ID lấy từ query string
-            : {};
+//         // Điều kiện lọc theo category ID (nếu có)
+//         const categoryFilter = req.query.type
+//             ? { category: req.query.type } // category ID lấy từ query string
+//             : {};
 
-        // Điều kiện tìm kiếm keyword
-        const keyword = req.query.keyword
-            ? {
-                  productName: {
-                      $regex: req.query.keyword,
-                      $options: "i",
-                  },
-              }
-            : {};
+//         // Điều kiện tìm kiếm keyword
+//         const keyword = req.query.keyword
+//             ? {
+//                   productName: {
+//                       $regex: req.query.keyword,
+//                       $options: "i",
+//                   },
+//               }
+//             : {};
 
-        // Kết hợp cả 2 điều kiện
-        const filterCondition = { ...categoryFilter, ...keyword };
+//         // Kết hợp cả 2 điều kiện
+//         const filterCondition = { ...categoryFilter, ...keyword };
 
-         const count = await Product.countDocuments(filterCondition);
+//          const count = await Product.countDocuments(filterCondition);
         
 
-        const products = await Product.findById(filterCondition)
-            .limit(pageSize)
-            .skip(pageSize * (page - 1));
+//         const products = await Product.find(filterCondition)
+//             .limit(pageSize)
+//             .skip(pageSize * (page - 1));
 
-        res.json({
-            product: products,
-            page,
-            pages: Math.ceil(count / pageSize),
-        });
-    })
-);
+//         res.json({
+//             product: products,
+//             page,
+//             pages: Math.ceil(count / pageSize),
+//         });
+//     })
+// );
 
 
 /**
