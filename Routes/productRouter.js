@@ -62,8 +62,12 @@ productRouter.get(
             }
         }
         : {};
-        const count = await Product.countDocuments({ ...keyword });
-        const product = await Product.find({ ...keyword })
+
+        const categoryFilter = req.query.type
+            ? { category: req.query.type } // category ID lấy từ query string
+            : {};
+        const count = await Product.countDocuments({ ...keyword, ...categoryFilter });
+        const product = await Product.find({ ...keyword, ...categoryFilter })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
         res.json({ product, page, pages: Math.ceil(count / pageSize) });
