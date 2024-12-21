@@ -70,6 +70,7 @@ productRouter.get(
         const data = await Product.find({ ...keyword, ...categoryFilter })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
+        console.log(...keyword);
         res.json({ data, page, pages: Math.ceil(count / pageSize) });
     })
 );
