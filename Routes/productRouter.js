@@ -67,10 +67,10 @@ productRouter.get(
             ? { category: req.query.type } // category ID lấy từ query string
             : {};
         const count = await Product.countDocuments({ ...keyword, ...categoryFilter });
-        const product = await Product.find({ ...keyword, ...categoryFilter })
+        const data = await Product.find({ ...keyword, ...categoryFilter })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
-        res.json({ product, page, pages: Math.ceil(count / pageSize) });
+        res.json({ data, page, pages: Math.ceil(count / pageSize) });
     })
 );
 
@@ -85,8 +85,8 @@ productRouter.get(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const product = await Product.find({}).sort({ _id: -1 });
-        res.json(product);
+        const data = await Product.find({}).sort({ _id: -1 });
+        res.json(data);
     })
 );
 /**
@@ -95,9 +95,9 @@ productRouter.get(
 productRouter.get(
     "/:id",
     asyncHandler(async (req, res) => {
-        const product = await Product.findById(req.params.id);
-        if (product) {
-            res.json(product);
+        const data = await Product.findById(req.params.id);
+        if (data) {
+            res.json(data);
         } else {
             res.status(404).send({ message: "product not found" });
             throw new Error("product not found");
