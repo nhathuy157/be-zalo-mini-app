@@ -28,10 +28,10 @@ bannerRouter.get(
         }
         : {};
         const count = await Banner.countDocuments({ ...keyword });
-        const banners = await Banner.find({ ...keyword })
+        const data = await Banner.find({ ...keyword })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
-        res.json({ banners, page, pages: Math.ceil(count / pageSize) });
+        res.json({ data, page, pages: Math.ceil(count / pageSize) });
     })
 );
 
