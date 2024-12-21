@@ -24,10 +24,10 @@ categoriesRouter.get(
         }
         : {};
         const count = await Category.countDocuments({ ...keyword });
-        const category = await Category.find({ ...keyword })
+        const data = await Category.find({ ...keyword })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
-        res.json({ category, page, pages: Math.ceil(count / pageSize) });
+        res.json({ data , page, pages: Math.ceil(count / pageSize) });
     })
 );
 /** 
@@ -41,8 +41,8 @@ categoriesRouter.get(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const category = await Category.find({}).sort({ _id: -1 });
-        res.json(category);
+        const data  = await Category.find({}).sort({ _id: -1 });
+        res.json(data );
     })
 );
 

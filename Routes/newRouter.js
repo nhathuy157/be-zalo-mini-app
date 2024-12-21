@@ -20,10 +20,10 @@ newsRouter.get(
         }
         : {};
         const count = await News.countDocuments({ ...keyword });
-        const news = await News.find({ ...keyword })
+        const data = await News.find({ ...keyword })
         .limit(pageSize)
         .skip(pageSize * (page - 1));
-        res.json({ news, page, pages: Math.ceil(count / pageSize) });
+        res.json({ data, page, pages: Math.ceil(count / pageSize) });
     })
 );
 
@@ -32,17 +32,17 @@ newsRouter.get(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const news = await News.find({}).sort({ _id: -1 });
-        res.json(news);
+        const data = await News.find({}).sort({ _id: -1 });
+        res.json(data);
     })
 );
 
 newsRouter.get(
     "/:id",
     asyncHandler(async (req, res) => {
-        const news = await News.findById(req.params.id);
-        if (news) {
-            res.json(news);
+        const data = await News.findById(req.params.id);
+        if (data) {
+            res.json(data);
         } else {
             res.status(404).send({ message: "News not found" });
             throw new Error("News not found");

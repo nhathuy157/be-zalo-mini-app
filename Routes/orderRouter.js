@@ -23,10 +23,10 @@ orderRouter.get(
       : {};
 
     const count = await Orders.countDocuments({ ...keyword });
-    const orders = await Orders.find({ ...keyword })
+    const data = await Orders.find({ ...keyword })
       .limit(pageSize)
       .skip(pageSize * (page - 1));
-    res.json({ orders, page, pages: Math.ceil(count / pageSize) });
+    res.json({ data, page, pages: Math.ceil(count / pageSize) });
   })
 );
 
@@ -39,8 +39,8 @@ orderRouter.get(
   protect,
   admin,
   asyncHandler(async (req, res) => {
-    const orders = await Orders.find({}).sort({ _id: -1 });
-    res.json(orders);
+    const data = await Orders.find({}).sort({ _id: -1 });
+    res.json(data);
   })
 );
 
@@ -50,9 +50,9 @@ orderRouter.get(
 orderRouter.get(
   "/:id",
   asyncHandler(async (req, res) => {
-    const order = await Orders.findById(req.params.id);
-    if (order) {
-      res.json(order);
+    const data= await Orders.findById(req.params.id);
+    if (data) {
+      res.json(data);
     } else {
       res.status(404);
       throw new Error("Order not found");
@@ -125,8 +125,8 @@ orderRouter.put(
       order.consultant = consultant || order.consultant;
       order.VAT = VAT || order.VAT;
       order.totalAccountAll = totalAccountAll || order.totalAccountAll;
-      const updatedOrder = await order.save();
-      res.json(updatedOrder);
+      const data= await order.save();
+      res.json(data);
     } else {
       res.status(404);
       throw new Error("Order not found");

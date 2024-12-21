@@ -23,10 +23,10 @@ productOrderRouter.get(
             }
             : {};
         const count = await ProductOrder.countDocuments({ ...keyword });
-        const productOrder = await ProductOrder.find({ ...keyword })
+        const data = await ProductOrder.find({ ...keyword })
             .limit(pageSize)
             .skip(pageSize * (page - 1));
-        res.json({ productOrder, page, pages: Math.ceil(count / pageSize) });
+        res.json({ data, page, pages: Math.ceil(count / pageSize) });
     })
 );
 
@@ -41,8 +41,8 @@ productOrderRouter.get(
     protect,
     admin,
     asyncHandler(async (req, res) => {
-        const productOrder = await ProductOrder.find({}).sort({ _id: -1 });
-        res.json(productOrder);
+        const data = await ProductOrder.find({}).sort({ _id: -1 });
+        res.json(data);
     })
 );
 
