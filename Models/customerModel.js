@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { trusted } from "mongoose";
 
 const customerSchema = new mongoose.Schema({
     name_customer: {
@@ -24,7 +24,19 @@ const customerSchema = new mongoose.Schema({
     customerCode: {
         type: String,
         required: false // Không bắt buộc
-    }
+    },
+    zaloId: {
+        type: String,
+        required: true 
+    },
+    followerId: {
+        type: String,    
+        required: true,
+    },
+    picture: {
+        type: String, // URL ảnh đại diện
+        required: false,
+      },
 }, {
     timestamps: true
 });

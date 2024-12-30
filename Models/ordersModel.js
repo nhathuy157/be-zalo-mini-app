@@ -13,7 +13,7 @@ const ordersSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    totalAmount: {
+    totalAmount: {  // Tổng tiền
         type: Number,
         required: true
     },
@@ -32,7 +32,7 @@ const ordersSchema = new mongoose.Schema({
         required: true,
         ref: "Consultants"
     },
-    totalAccountAll: {
+    totalAccountAll: { // Tổng tiền đã cọc
         type: Number,
         required: true
     },
@@ -40,6 +40,8 @@ const ordersSchema = new mongoose.Schema({
         type: Number,
         required: true
     } 
+    
+    
 }, {
     timestamps: true
 });

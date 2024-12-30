@@ -1,5 +1,5 @@
 import asyncHandler from "express-async-handler";
-import { getOrderDetails } from "../services/zaloServices.js";
+import ZaloService from "../services/zaloServices.js";
 
 
 
@@ -11,7 +11,7 @@ const getOderInfo = asyncHandler(async (req, res) => {
      }
 
      try {
-        const orderDetails = await getOrderDetails( accessToken);
+        const orderDetails = await ZaloService.getZaloProfile(accessToken);
         res.json({
             message : "Success",
             data : orderDetails

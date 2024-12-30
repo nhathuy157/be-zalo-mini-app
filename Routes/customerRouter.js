@@ -2,14 +2,75 @@ import express from "express";
 import asyncHandler from "express-async-handler";
 import Customer from "../Models/customerModel.js";
 import { admin, protect } from "../Middleware/AuthMiddleware.js";
-import categoriesRouter from "./categoriesRouter.js";
+import auth from "../services/auth-service.js";
+import ZaloService from "../services/zaloServices.js";
+
 
 const customerRouter = express.Router();
 
+customerRouter.get(
+    "/logged-in",
+    auth.verify,
+    asyncHandler(async (req, res) => {
+      res.json({
+        error: 0,
+        message: "Success",
+        data: req.user, // `req.user` được gắn bởi middleware `verify`
+      });
+    })
+  );
+  
+customerRouter.post(
+    "/login",
+    asyncHandler(async (req, res) => {
+      const { accessToken } = req.body;
+      if (!accessToken) {
+        res.status(400);
+        throw new Error("Access token is required");
+      }
+  
+      // Lấy thông tin từ Zalo
+      const { id, birthday, name, gender, picture } = await ZaloService.getZaloProfile(accessToken);
+  
+      // Xử lý ngày sinh
+      let birthDate = null;
+      if (birthday) {
+        const parts = birthday.split("/");
+        birthDate = new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+  
+      // Xử lý ảnh đại diện
+      let pictureUrl = picture?.data?.url || picture;
+  
+      // Tìm kiếm hoặc cập nhật người dùng
+      const customer = await Customer.findOneAndUpdate(
+        { zaloId: id },
+        {
+          name_customer: name,
+          sex: gender === "male",
+          registrationDate: birthDate,
+          picture: pictureUrl,
+          followerId: id,
+        },
+        { new: true, upsert: true }
+      );
+  
+      // Tạo JWT token
+      const jwt = auth.genJSONWebToken(id, 3600);
+  
+      res.json({
+        error: 0,
+        message: "Success",
+        data: { ...customer.toObject(), jwt },
+      });
+    })
+  );
 
 /**
  * Get all customer
  */
+
+
 
 customerRouter.get(
     "/", 

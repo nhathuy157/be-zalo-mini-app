@@ -24,7 +24,19 @@ const productOrdersSchema = new mongoose.Schema({
     quantity:{
         type: Number,
         default: 0
-    }
+    },
+    print: {
+        type: String,
+        required: true
+
+    },
+    embroider: {
+        type: String,
+        required: true
+    },
+    
+
+
     
     // releaseDate: {
     //     type: Date,

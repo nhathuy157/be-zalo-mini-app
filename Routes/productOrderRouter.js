@@ -79,6 +79,8 @@ productOrderRouter.post(
             price,
             material,
             quantity,
+            print,
+            embroider,
 
         } = req.body;
         const productOrderExist = await ProductOrder.findOne({});
@@ -93,6 +95,8 @@ productOrderRouter.post(
                 price,
                 material,
                 quantity,
+                print,
+                embroider,
             });
             const createdProductOrder = await productOrder.save();
             res.status(201).json(createdProductOrder);
@@ -117,6 +121,8 @@ productOrderRouter.put(
             price,
             material,
             quantity,
+            print,
+            embroider,
         } = req.body;
         const productOrder = await ProductOrder.findById(req.params.id);
         if (productOrder) {
@@ -126,6 +132,8 @@ productOrderRouter.put(
             productOrder.price = price || productOrder.price;
             productOrder.material = material || productOrder.material;
             productOrder.quantity = quantity || productOrder.quantity;
+            productOrder.print = print || productOrder.print;
+            productOrder.embroider = embroider || productOrder.embroider;
             const updatedProductOrder = await productOrder.save();
             res.json(updatedProductOrder);
         } else {
