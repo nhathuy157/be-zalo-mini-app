@@ -110,18 +110,18 @@ customerRouter.get(
 /**
  * get type by id
  */
-customerRouter.get(
-    "/:id",
-    asyncHandler(async (req, res) => {
-        const customer = await Customer.findById(req.params.id);
-        if (customer) {
-            res.json(customer);
-        } else {
-            res.status(404);
-            throw new Error("Customer not found");
-        }
-    })
-);
+// customerRouter.get(
+//     "/:id",
+//     asyncHandler(async (req, res) => {
+//         const customer = await Customer.findById(req.params.id);
+//         if (customer) {
+//             res.json(customer);
+//         } else {
+//             res.status(404);
+//             throw new Error("Customer not found");
+//         }
+//     })
+// );
 
 /**
  * Create customer
@@ -140,7 +140,7 @@ customerRouter.post(
             throw new Error("Category already exists");
         } else {
             const customer = new Customer({
-                name_customer, email, phone, sex, registrationDate, customerCode
+                name_customer, email, phone, sex, registrationDate, customerCode, zaloId, followerId, picture
             });
             const createdCustomer = await customer.save();
             res.status(201).json(createdCustomer );
@@ -165,6 +165,10 @@ customerRouter.put(
             customer.sex = sex || customer.sex; 
             customer.registrationDate = registrationDate || customer.registrationDate;
             customer.customerCode = customerCode || customer.customerCode;
+            customer.email = email || customer.email;
+            customer.zaloId = zaloId || customer.zaloId;
+            customer.followerId = followerId || customer.followerId;
+            customer.picture = picture || customer.picture; 
             const updatedCustomer= await customer.save();
             res.json(updatedCustomer);
         } else {

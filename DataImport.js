@@ -209,25 +209,48 @@ ImportData.post(
   })
 );
 
+function generateRandomId(length = 16) {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 ImportData.post(
   "/customer",
   asyncHandler(async (req, res) => {
-    await Customer.deleteMany({}); // Xóa hết dữ liệu cũ trong collection 'Customer'
-    const formattedCustomers = order.map(order => ({
-      name_customer: order.customer?.name || `Customer_${Date.now()}`, // Nếu thiếu name_customer, dùng một giá trị mặc định
-      email: order.customer?.email || "email@default.com", // Nếu thiếu email, dùng giá trị mặc định
-      phone: order.customer?.phone || "0000000000", // Nếu thiếu phone, dùng giá trị mặc định
-      sex: order.customer?.sex ?? true, // Nếu thiếu sex, dùng giá trị mặc định true (nam)
-      registrationDate: order.customer?.registrationDate || Date.now(), // Dùng ngày hiện tại nếu thiếu
-      customerCode: order.customer?.customerCode || `CODE_${Date.now()}`, // Nếu thiếu, tạo một mã mặc định
-    }));
+    // Xóa hết dữ liệu cũ trong collection 'Customer'
+    await Customer.deleteMany({});
 
-    // Thêm dữ liệu đã định dạng vào collection Customers
-    const importCustomers = await Customer.insertMany(formattedCustomers);
+    // Lấy dữ liệu từ `order` và định dạng lại
+    const formattedCustomers = order.map(order => {
+      const customer = order.customer || {}; // Nếu không có order.customer, gán giá trị mặc định là {}
+      return {
+        name_customer: customer.name || `Customer_${Date.now()}`, // Giá trị mặc định cho name_customer
+        email: customer.email || "email@default.com", // Giá trị mặc định cho email
+        phone: customer.phone || "0000000000", // Giá trị mặc định cho phone
+        sex: customer.sex ?? true, // Nếu thiếu sex, mặc định là true (nam)
+        registrationDate: customer.registrationDate || Date.now(), // Mặc định là ngày hiện tại
+        customerCode: customer.customerCode || `CODE_${Date.now()}`, // Mã khách hàng mặc định
+        zaloId: customer.zaloId || generateRandomId(8), // Giá trị mặc định cho zaloId
+        picture: customer.picture || "", // Giá trị mặc định cho picture
+        followerId: customer.followerId || generateRandomId(8), // Giá trị mặc định cho followerId
+      };
+    });
 
-    res.send({ importCustomers });
+    // Lưu vào cơ sở dữ liệu
+    await Customer.insertMany(formattedCustomers);
+
+    // Trả về kết quả
+    res.status(201).json({
+      message: "Customer data imported successfully",
+      count: formattedCustomers.length,
+    });
   })
 );
+
 
 
 
