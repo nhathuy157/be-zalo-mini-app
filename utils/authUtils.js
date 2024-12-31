@@ -1,13 +1,19 @@
-import crypto from "crypto";
-import base64url from "base64url";
+const crypto = require('crypto');
 
-//create function random code verifier
-export const generateCodeVerifier = () => { 
-    return base64url(crypto.randomBytes(32));
+// Tạo code_verifier ngẫu nhiên
+function generateCodeVerifier() {
+    return crypto.randomBytes(32).toString('base64url'); // base64url là phiên bản Base64 không padding
 }
 
-//function create code challenge form code verifier
-export const generateCodeChallenge = (codeVerifier) => {
-    const sha256Hash = crypto.createHash("sha256").update(codeVerifier).digest();
-    return base64url(sha256Hash);   
+// Tạo code_challenge từ code_verifier
+function generateCodeChallenge(codeVerifier) {
+    const hash = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
+    return hash; // Code challenge đã được mã hóa bằng SHA-256 và base64url
 }
+
+// Ví dụ sử dụng
+const codeVerifier = generateCodeVerifier();
+const codeChallenge = generateCodeChallenge(codeVerifier);
+
+console.log('Code Verifier:', codeVerifier);
+console.log('Code Challenge:', codeChallenge);

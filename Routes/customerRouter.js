@@ -42,7 +42,7 @@ customerRouter.post(
       // Xử lý ảnh đại diện
       let pictureUrl = picture?.data?.url || picture;
   
-      // Tìm kiếm hoặc cập nhật người dùng
+      
       const customer = await Customer.findOneAndUpdate(
         { zaloId: id },
         {
@@ -50,7 +50,7 @@ customerRouter.post(
           sex: gender === "male",
           registrationDate: birthDate,
           picture: pictureUrl,
-          followerId: id,
+       
         },
         { new: true, upsert: true }
       );
