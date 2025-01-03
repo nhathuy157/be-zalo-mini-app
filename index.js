@@ -81,6 +81,9 @@ app.use(function (req, res, next) {
     next();
 });
 
+// Middleware để parse JSON và x-www-form-urlencoded payload
+app.use(express.json()); // Cho JSON payload
+app.use(express.urlencoded({ extended: true })); // Cho form-urlencoded payload
 
 
 app.post('/api/getOrderInfo', getOderInfo);
@@ -97,6 +100,9 @@ app.use("/api/v1/productOrder", productOrderRouter);
 app.use("/api/v1/products", productsRouter);
 app.use("/api/v1/consultant", productsRouter);
 app.use("/api/v1/auth", authRouter);
+
+
+
 
 
 

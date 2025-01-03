@@ -3,6 +3,8 @@
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+
 
 dotenv.config();
 
@@ -15,7 +17,7 @@ const CALLBACK_URL = process.env.CALLBACK_URL;
 
 
 // Route để người dùng cho phép ứng dụng và lấy mã Authorization Code
-authRouter.get('/api/v1/zalo-auth-url', (req, res) => {
+authRouter.get('/zalo-auth-url', (req, res) => {
     
     const STATE = crypto.randomBytes(16).toString('hex'); // Tạo state ngẫu nhiên
 
@@ -44,44 +46,64 @@ authRouter.get('/api/v1/zalo-auth-url', (req, res) => {
     });
 });
 
-// Route nhận `authorization code` từ Zalo sau khi người dùng cho phép
+// Route xử lý lấy Access Token
 authRouter.post('/access-token', async (req, res) => {
- // const { code, code_verifier } = req.body; // Lấy code và code_verifier từ body request
+    console.log('Headers:', req.headers); // Log header để debug
+    console.log('Request Body:', req.body); // Log body để kiểm tra request
 
-  if (!code || !code_verifier) {
-      return res.status(400).json({ message: 'Thiếu code hoặc code_verifier!' });
-  }
+    const { code, code_verifier } = req.body;
 
-  try {
-      const tokenResponse = await axios({
-          method: 'POST',
-          url: 'https://oauth.zaloapp.com/v4/access_token',
-          headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              secret_key: SECRET_KEY,
-          },
-          data: new URLSearchParams({
-              code: code,
-              app_id: APP_ID,
-              grant_type: 'authorization_code',
-              code_verifier: code_verifier,
-          }).toString(),
-      });
+    if (!code || !code_verifier) {
+        return res.status(400).json({ message: 'Thiếu code hoặc code_verifier!' });
+    }
 
-      const { access_token, refresh_token, expires_in } = tokenResponse.data;
+    try {
+        // Gửi request tới Zalo API
+        const tokenResponse = await axios({
+            method: 'POST',
+            url: 'https://oauth.zaloapp.com/v4/access_token',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                secret_key: process.env.SECRET_KEY, // Lấy từ file .env
+            },
+            data: new URLSearchParams({
+                code: code,
+                app_id: process.env.APP_ID, // Lấy từ file .env
+                grant_type: 'authorization_code',
+                code_verifier: code_verifier,
+            }).toString(),
+        });
 
-      res.json({
-          message: 'Lấy Access Token thành công!',
-          access_token,
-          refresh_token,
-          expires_in,
-      });
-  } catch (error) {
-      console.error('Lỗi khi lấy Access Token:', error.message);
-      res.status(500).json({ message: 'Có lỗi xảy ra khi lấy Access Token' });
-  }
+        // Log phản hồi của Zalo
+        console.log('Token Response:', tokenResponse.data);
+
+        const { access_token, refresh_token, expires_in } = tokenResponse.data;
+
+        if (!access_token) {
+            return res.status(400).json({ message: 'Không nhận được Access Token!' });
+        }
+
+        // Gửi phản hồi về client
+        res.json({
+            message: 'Lấy Access Token thành công!',
+            access_token,
+            refresh_token,
+            expires_in,
+        });
+    } catch (error) {
+        // Log lỗi nếu xảy ra
+        console.error('Lỗi khi lấy Access Token:', error.response?.data || error.message);
+
+        res.status(500).json({
+            message: 'Có lỗi xảy ra khi lấy Access Token',
+            error: error.response?.data || error.message,
+        });
+    }
 });
 
+
 export default authRouter;
+
+
 
 
