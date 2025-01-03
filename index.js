@@ -10,10 +10,10 @@ import orderRouter from "./Routes/orderRouter.js";
 import customerRouter from "./Routes/customerRouter.js";
 import swaggerJSDoc from 'swagger-jsdoc';
 import { notFound, errorHandler } from './Middleware/Errors.js';
-import { scrapeAndDisplayCategories, scrapeAllProductData } from './controllers/sitemapController.js'
 import { getOderInfo } from './controllers/apiController.js';
 import bannerRouter from "./Routes/bannerRouter.js";
-import crypto from 'crypto';
+import authRouter from "./Routes/authRouter.js";
+
 
 
 
@@ -81,35 +81,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/api/v1/zalo-auth-url', (req, res) => {
-    const APP_ID = process.env.APP_ID; // Lấy APP_ID từ .env
-    const CALLBACK_URL = process.env.CALLBACK_URL; // Lấy URL callback từ .env
-    const STATE = crypto.randomBytes(16).toString('hex'); // Tạo state ngẫu nhiên
 
-    // Tạo code_verifier ngẫu nhiên
-    function generateCodeVerifier() {
-        return crypto.randomBytes(32).toString('base64url'); // base64url là phiên bản Base64 không padding
-    }
-
-    // Tạo code_challenge từ code_verifier
-    function generateCodeChallenge(codeVerifier) {
-        const hash = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
-        return hash; // Code challenge đã được mã hóa bằng SHA-256 và base64url
-    }
-
-    const codeVerifier = generateCodeVerifier();
-    const codeChallenge = generateCodeChallenge(codeVerifier);
-
-    // Tạo URL OAuth
-    const url = `https://oauth.zaloapp.com/v4/permission?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(CALLBACK_URL)}&code_challenge=${codeChallenge}&state=${STATE}`;
-
-    // Trả về URL OAuth cho client
-    res.json({
-        authorizationUrl: url,
-        state: STATE, // Trả về state cho client lưu lại để đối chiếu
-        codeVerifier: codeVerifier // Bạn có thể lưu trữ codeVerifier ở đâu đó an toàn để kiểm tra khi nhận mã ủy quyền
-    });
-});
 
 app.post('/api/getOrderInfo', getOderInfo);
 
@@ -124,6 +96,7 @@ app.use("/api/v1/customer", customerRouter);
 app.use("/api/v1/productOrder", productOrderRouter);
 app.use("/api/v1/products", productsRouter);
 app.use("/api/v1/consultant", productsRouter);
+app.use("/api/v1/auth", authRouter);
 
 
 
