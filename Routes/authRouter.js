@@ -4,6 +4,10 @@ import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
 import crypto from 'crypto';
+import NodeCache from 'node-cache';
+
+/** Bộ nhớ đệm để lưu codeVerifier và state */
+const codeVerifierCache = new NodeCache({ stdTTL: 600 });
 
 
 dotenv.config();
@@ -14,6 +18,8 @@ const authRouter = express.Router();
 const APP_ID = process.env.APP_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
 const CALLBACK_URL = process.env.CALLBACK_URL;
+
+
 
 
 // Route để người dùng cho phép ứng dụng và lấy mã Authorization Code
@@ -35,6 +41,9 @@ authRouter.get('/zalo-auth-url', (req, res) => {
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = generateCodeChallenge(codeVerifier);
 
+    codeVerifierCache.set(STATE, codeVerifier);
+
+
     // Tạo URL OAuth
     const url = `https://oauth.zaloapp.com/v4/permission?app_id=${APP_ID}&redirect_uri=${encodeURIComponent(CALLBACK_URL)}&code_challenge=${codeChallenge}&state=${STATE}`;
 
@@ -44,17 +53,29 @@ authRouter.get('/zalo-auth-url', (req, res) => {
         state: STATE, // Trả về state cho client lưu lại để đối chiếu
         codeVerifier: codeVerifier // Bạn có thể lưu trữ codeVerifier ở đâu đó an toàn để kiểm tra khi nhận mã ủy quyền
     });
+
+
 });
+
+function getCodeVerifier(state) {
+    return codeVerifierCache.get(state);
+}
 
 // Route xử lý lấy Access Token
 authRouter.get('/access-token', async (req, res) => {
      console.log('Headers:', req.headers); // Log header để debug
      console.log('Request Body:', req.body); // Log body để kiểm tra request
 
-    const { code, code_verifier } = req.body;
+    const { code, state } = req.body;
 
-    if (!code || !code_verifier) {
-        return res.status(400).json({ message: 'Thiếu code hoặc code_verifier!' });
+    if (!code || !state) {
+        return res.status(400).json({ message: 'Thiếu code hoặc state!' });
+    }
+
+    const code_verifier = getCodeVerifier(state);
+
+    if (!code_verifier) {
+        return res.status(400).json({ message: 'Không nhận được Code Verifier!' });
     }
 
     try {
