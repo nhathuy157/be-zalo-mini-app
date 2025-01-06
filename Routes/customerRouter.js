@@ -30,7 +30,7 @@ customerRouter.post(
       }
   
       // Lấy thông tin từ Zalo
-      const { id, birthday, name, gender, picture } = await ZaloService.getZaloProfile(accessToken);
+      const { id, birthday, name, gender, picture, phone_number } = await ZaloService.getZaloProfile(accessToken);
   
       // Xử lý ngày sinh
       let birthDate = null;
@@ -48,8 +48,11 @@ customerRouter.post(
         {
           name_customer: name,
           sex: gender === "male",
-          registrationDate: birthDate,
+          registrationDate: birthDate || new Date(),
           picture: pictureUrl,
+          phone_number: phone_number || "N/A",
+          followerId: "N/A",
+          email: "N/A",
        
         },
         { new: true, upsert: true }
