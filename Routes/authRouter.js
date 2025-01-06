@@ -87,17 +87,17 @@ authRouter.get('/access-token', async (req, res) => {
             url: 'https://oauth.zaloapp.com/v4/access_token',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
-                secret_key: process.env.SECRET_KEY, // Lấy từ file .env
+                secret_key: process.env.SECRET_KEY, 
             },
             data: new URLSearchParams({
                 code: code,
-                app_id: process.env.APP_ID, // Lấy từ file .env
+                app_id: process.env.APP_ID, 
                 grant_type: 'authorization_code',
                 code_verifier: code_verifier,
             }).toString(),
         });
 
-        // Log phản hồi của Zalo
+        
         console.log('Token Response:', tokenResponse.data);
 
         const { access_token, refresh_token, expires_in } = tokenResponse.data;
@@ -106,7 +106,7 @@ authRouter.get('/access-token', async (req, res) => {
             return res.status(400).json({ message: 'Không nhận được Access Token!' });
         }
 
-        // Gửi phản hồi về client
+        
         res.json({
             message: 'Lấy Access Token thành công!',
             access_token,

@@ -15,7 +15,7 @@ customerRouter.get(
       res.json({
         error: 0,
         message: "Success",
-        data: req.user, // `req.user` được gắn bởi middleware `verify`
+        data: req.user, 
       });
     })
   );
