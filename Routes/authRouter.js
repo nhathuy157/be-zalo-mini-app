@@ -64,9 +64,11 @@ function getCodeVerifier(state) {
 // Route xử lý lấy Access Token
 authRouter.get('/access-token', async (req, res) => {
      console.log('Headers:', req.headers); // Log header để debug
-     console.log('Request Body:', req.body); // Log body để kiểm tra request
+     console.log('Request Body:', req.query); // Log body để kiểm tra request
 
-    const { code, state } = req.body;
+    const { code, state } = req.query;
+
+    
 
     if (!code || !state) {
         return res.status(400).json({ message: 'Thiếu code hoặc state!' });
