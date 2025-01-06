@@ -47,58 +47,59 @@ authRouter.get('/zalo-auth-url', (req, res) => {
 });
 
 // Route xử lý lấy Access Token
-authRouter.post('/access-token', async (req, res) => {
-    console.log('Headers:', req.headers); // Log header để debug
-    console.log('Request Body:', req.body); // Log body để kiểm tra request
+authRouter.get('/access-token', async (req, res) => {
+     console.log('Headers:', req.headers); // Log header để debug
+     console.log('Request Body:', req.body); // Log body để kiểm tra request
 
-    const { code, code_verifier } = req.body;
+    // const { code, code_verifier } = req.body;
 
-    if (!code || !code_verifier) {
-        return res.status(400).json({ message: 'Thiếu code hoặc code_verifier!' });
-    }
+    // if (!code || !code_verifier) {
+    //     return res.status(400).json({ message: 'Thiếu code hoặc code_verifier!' });
+    // }
 
-    try {
-        // Gửi request tới Zalo API
-        const tokenResponse = await axios({
-            method: 'POST',
-            url: 'https://oauth.zaloapp.com/v4/access_token',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                secret_key: process.env.SECRET_KEY, // Lấy từ file .env
-            },
-            data: new URLSearchParams({
-                code: code,
-                app_id: process.env.APP_ID, // Lấy từ file .env
-                grant_type: 'authorization_code',
-                code_verifier: code_verifier,
-            }).toString(),
-        });
+    // try {
+    //     // Gửi request tới Zalo API
+    //     const tokenResponse = await axios({
+    //         method: 'POST',
+    //         url: 'https://oauth.zaloapp.com/v4/access_token',
+    //         headers: {
+    //             'Content-Type': 'application/x-www-form-urlencoded',
+    //             secret_key: process.env.SECRET_KEY, // Lấy từ file .env
+    //         },
+    //         data: new URLSearchParams({
+    //             code: code,
+    //             app_id: process.env.APP_ID, // Lấy từ file .env
+    //             grant_type: 'authorization_code',
+    //             code_verifier: code_verifier,
+    //         }).toString(),
+    //     });
 
-        // Log phản hồi của Zalo
-        console.log('Token Response:', tokenResponse.data);
+    //     // Log phản hồi của Zalo
+    //     console.log('Token Response:', tokenResponse.data);
 
-        const { access_token, refresh_token, expires_in } = tokenResponse.data;
+    //     const { access_token, refresh_token, expires_in } = tokenResponse.data;
 
-        if (!access_token) {
-            return res.status(400).json({ message: 'Không nhận được Access Token!' });
-        }
+    //     if (!access_token) {
+    //         return res.status(400).json({ message: 'Không nhận được Access Token!' });
+    //     }
 
-        // Gửi phản hồi về client
-        res.json({
-            message: 'Lấy Access Token thành công!',
-            access_token,
-            refresh_token,
-            expires_in,
-        });
-    } catch (error) {
-        // Log lỗi nếu xảy ra
-        console.error('Lỗi khi lấy Access Token:', error.response?.data || error.message);
+    //     // Gửi phản hồi về client
+    //     res.json({
+    //         message: 'Lấy Access Token thành công!',
+    //         access_token,
+    //         refresh_token,
+    //         expires_in,
+    //     });
+    // } catch (error) {
+    //     // Log lỗi nếu xảy ra
+    //     console.error('Lỗi khi lấy Access Token:', error.response?.data || error.message);
 
-        res.status(500).json({
-            message: 'Có lỗi xảy ra khi lấy Access Token',
-            error: error.response?.data || error.message,
-        });
-    }
+    //     res.status(500).json({
+    //         message: 'Có lỗi xảy ra khi lấy Access Token',
+    //         error: error.response?.data || error.message,
+    //     });
+    // }
+   // console.log('Headers:', req.headers); // Log header để debug
 });
 
 
