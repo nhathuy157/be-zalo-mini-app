@@ -22,7 +22,7 @@ const CALLBACK_URL = process.env.CALLBACK_URL;
 
 
 
-// Route để người dùng cho phép ứng dụng và lấy mã Authorization Code
+//Route để người dùng cho phép ứng dụng và lấy mã Authorization Code
 authRouter.get('/zalo-auth-url', (req, res) => {
     
     const STATE = crypto.randomBytes(16).toString('hex'); // Tạo state ngẫu nhiên
@@ -55,6 +55,75 @@ authRouter.get('/zalo-auth-url', (req, res) => {
     });
 
 
+});
+
+
+export function generateZaloAuthUrl(
+    appId,
+    callbackUrl,
+    state,
+    codeVerifierCache
+) {
+    // Tạo code_verifier ngẫu nhiên
+    function generateCodeVerifier(){
+        return crypto.randomBytes(32).toString('base64url'); // Base64 URL-safe không padding
+    }
+
+    // Tạo code_challenge từ code_verifier
+    function generateCodeChallenge(codeVerifier) {
+        const hash = crypto.createHash('sha256').update(codeVerifier).digest('base64url'); // Base64 URL-safe không padding
+        return hash;
+    }
+
+    const codeVerifier = generateCodeVerifier(); // Tạo code_verifier
+    const codeChallenge = generateCodeChallenge(codeVerifier); // Sinh code_challenge từ code_verifier
+
+    // Lưu codeVerifier vào cache với key là state
+    codeVerifierCache.set(state, codeVerifier);
+
+    // Tạo URL OAuth
+    const authorizationUrl = `https://oauth.zaloapp.com/v4/permission?app_id=${appId}&redirect_uri=${encodeURIComponent(callbackUrl)}&code_challenge=${codeChallenge}&state=${state}`;
+
+    return {
+        authorizationUrl, // URL yêu cầu người dùng cấp quyền
+        codeVerifier, // Trả về codeVerifier để sử dụng trong bước lấy access token
+    };
+}
+
+
+authRouter.get('/zalo-auth', async (req, res) => {
+    const state = crypto.randomBytes(16).toString('hex'); // Tạo state ngẫu nhiên
+
+    try {
+        // 1. Tạo URL Authorization
+        const { authorizationUrl, codeVerifier } = generateZaloAuthUrl(APP_ID, CALLBACK_URL, state, codeVerifierCache);
+
+        // 2. Lưu lại codeVerifier (nếu cần cho các bước tiếp theo)
+        codeVerifierCache.set(state, codeVerifier);
+
+        console.log('Step 1: Authorization URL:', authorizationUrl);
+
+        // 3. Gửi yêu cầu GET đến URL Authorization
+        const response = await axios.get(authorizationUrl, {
+            maxRedirects: 0, // Không tự động theo dõi redirect
+            validateStatus: (status) => status === 302 || status === 200, // Chỉ xử lý mã trạng thái 302 hoặc 200
+        });
+
+        if (response.status === 302) {
+            // 4. Trích xuất URL từ phản hồi
+            const nextUrl = response.headers.location; // `location` chứa URL tiếp theo
+            console.log('Step 2: Redirect URL:', nextUrl);
+
+            // Gửi lại URL tiếp theo cho client (hoặc tiếp tục xử lý nếu cần)
+            return res.json({ nextUrl });
+        }
+
+        // Nếu không có redirect, trả về nội dung phản hồi
+        return res.json({ message: 'Không có redirect', data: response.data });
+    } catch (error) {
+        console.error('Lỗi trong chuỗi yêu cầu:', error.message);
+        res.status(500).json({ message: 'Có lỗi xảy ra trong chuỗi yêu cầu', error: error.message });
+    }
 });
 
 function getCodeVerifier(state) {
