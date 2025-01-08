@@ -114,8 +114,10 @@ authRouter.get('/zalo-auth', async (req, res) => {
             const nextUrl = response.headers.location; // `location` chứa URL tiếp theo
             console.log('Step 2: Redirect URL:', nextUrl);
 
+            const nextUrl2 = nextUrl.headers.location;
+
             // Gửi lại URL tiếp theo cho client (hoặc tiếp tục xử lý nếu cần)
-            return res.json({ nextUrl });
+            return res.json({ nextUrl2 });
         }
 
         // Nếu không có redirect, trả về nội dung phản hồi
