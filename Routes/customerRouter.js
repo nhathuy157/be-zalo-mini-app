@@ -8,6 +8,46 @@ import ZaloService from "../services/zaloServices.js";
 
 const customerRouter = express.Router();
 
+const APP_ID = process.env.APP_ID;
+const SECRET_KEY = process.env.SECRET_KEY;
+const CALLBACK_URL = process.env.CALLBACK_URL;
+
+customerRouter.post("/get-phone-number", async (req, res) => {
+  const { token, user_token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required." });
+  }
+
+  try {
+    // Gọi API của Zalo
+    const response = await fetch("https://graph.zalo.me/v2.0/me/info", {
+      method: "GET",
+      headers: {
+        "access_token": user_token, // Access token từ Zalo App
+        "code": token,                      // Token từ FE gửi lên
+        "secret_key": SECRET_KEY,    // Secret key của Zalo App
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Zalo API error: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    if (data.phone) {
+      res.json({ phoneNumber: data.phone }); // Trả số điện thoại về FE
+    } else {
+      res.status(500).json({ message: "Phone number not found in Zalo response." });
+    }
+  } catch (error) {
+    console.error("Error fetching phone number from Zalo:", error.message);
+    res.status(500).json({ message: "Internal server error." });
+  }
+});
+
+
 customerRouter.get(
     "/logged-in",
     auth.verify,
