@@ -13,7 +13,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const CALLBACK_URL = process.env.CALLBACK_URL;
 
 function changeUrlToProxy(url) {
-  return url.replace("https://graph.zalo.me", "http://localhost:3000");
+  return url.replace("https://graph.zalo.me", "http://103.82.195.80:3000");
 }
 
 customerRouter.post("/get-phone-number", async (req, res) => {
