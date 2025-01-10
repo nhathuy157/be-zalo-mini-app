@@ -40,8 +40,8 @@ customerRouter.post("/get-phone-number", async (req, res) => {
 
     const data = await response.json();
 
-    if (data.phone) {
-      res.json({ phoneNumber: data.phone }); // Trả số điện thoại về FE
+    if (data) {
+      res.json({ phoneNumber: data }); // Trả số điện thoại về FE
     } else {
       res.json({ message: "Phone number not found in Zalo response." });
     }
