@@ -19,6 +19,10 @@ customerRouter.post("/get-phone-number", async (req, res) => {
     return res.status(400).json({ message: "Token is required." });
   }
 
+  if (!user_token) {
+    return res.status(400).json({ message: "User token is required." });
+  }
+
   try {
     // Gọi API của Zalo
     const response = await fetch("https://graph.zalo.me/v2.0/me/info", {
@@ -39,7 +43,7 @@ customerRouter.post("/get-phone-number", async (req, res) => {
     if (data.phone) {
       res.json({ phoneNumber: data.phone }); // Trả số điện thoại về FE
     } else {
-      res.status(500).json({ message: "Phone number not found in Zalo response." });
+      res.json({ message: "Phone number not found in Zalo response." });
     }
   } catch (error) {
     console.error("Error fetching phone number from Zalo:", error.message);
