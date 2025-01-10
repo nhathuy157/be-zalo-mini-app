@@ -12,6 +12,10 @@ const APP_ID = process.env.APP_ID;
 const SECRET_KEY = process.env.SECRET_KEY;
 const CALLBACK_URL = process.env.CALLBACK_URL;
 
+function changeUrlToProxy(url) {
+  return url.replace("https://graph.zalo.me", "http://localhost:3000");
+}
+
 customerRouter.post("/get-phone-number", async (req, res) => {
   const { token, user_token } = req.body;
 
@@ -25,7 +29,7 @@ customerRouter.post("/get-phone-number", async (req, res) => {
 
   try {
     // Gọi API của Zalo
-    const response = await fetch("https://graph.zalo.me/v2.0/me/info", {
+    const response = await fetch(changeUrlToProxy("https://graph.zalo.me/v2.0/me/info"), {
       method: "GET",
       headers: {
         "access_token": user_token, // Access token từ Zalo App
