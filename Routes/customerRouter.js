@@ -33,8 +33,8 @@ customerRouter.post("/get-phone-number", async (req, res) => {
       method: "GET",
       headers: {
         "access_token": user_token, // Access token từ Zalo App
-        "code": token,                      // Token từ FE gửi lên
-        "secret_key": SECRET_KEY,    // Secret key của Zalo App
+        // "code": token,                      // Token từ FE gửi lên
+        // "secret_key": SECRET_KEY,    // Secret key của Zalo App
       },
     });
 
