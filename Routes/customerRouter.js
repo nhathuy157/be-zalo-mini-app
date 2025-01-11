@@ -64,7 +64,7 @@ customerRouter.post("/get-phone-number", async (req, res) => {
       res.json({ phoneNumber: data }); // Trả số điện thoại về FE
     } else {
       res.json({ message: "Phone number not found in Zalo response." });
-    }
+    }s
   } catch (error) {
     console.error("Error fetching phone number from Zalo:", error);
     res.status(500).json({ message: "Internal server error." });
