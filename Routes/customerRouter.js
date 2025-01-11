@@ -35,7 +35,7 @@ customerRouter.post("/get-phone-number", async (req, res) => {
     const headers = {
       "access_token": user_token, // Access token từ Zalo App
       "code": token,             // Token từ FE gửi lên
-      "secret_key": SECRET_KEY,  // Secret key của Zalo App
+      "secret_key": process.env.SECRET_KEY,  // Secret key của Zalo App
     };
 
     console.log("URL gửi đến proxy:", proxyUrl);
