@@ -9,9 +9,7 @@ import fetch from "node-fetch";
 
 const customerRouter = express.Router();
 
-const APP_ID = process.env.APP_ID;
-const SECRET_KEY = process.env.SECRET_KEY;
-const CALLBACK_URL = process.env.CALLBACK_URL;
+
 
 function changeUrlToProxy(url) {
   return url.replace("https://graph.zalo.me", "http://103.82.195.80:3000");
@@ -60,11 +58,11 @@ customerRouter.post("/get-phone-number", async (req, res) => {
     const data = await response.json();
     console.log("Dữ liệu từ API Zalo:", data);
 
-    if (data) {
-      res.json({ phoneNumber: data }); // Trả số điện thoại về FE
+    if (data && data.data && data.data.number) {
+      res.json({ phoneNumber: data.data.number }); // Trả về đúng định dạng
     } else {
-      res.json({ message: "Phone number not found in Zalo response." });
-    }s
+      res.status(404).json({ message: "Phone number not found in Zalo response." });
+    }
   } catch (error) {
     console.error("Error fetching phone number from Zalo:", error);
     res.status(500).json({ message: "Internal server error." });
