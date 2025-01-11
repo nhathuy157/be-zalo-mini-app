@@ -4,6 +4,7 @@ import Customer from "../Models/customerModel.js";
 import { admin, protect } from "../Middleware/AuthMiddleware.js";
 import auth from "../services/auth-service.js";
 import ZaloService from "../services/zaloServices.js";
+import fetch from "node-fetch";
 
 
 const customerRouter = express.Router();
@@ -19,6 +20,7 @@ function changeUrlToProxy(url) {
 customerRouter.post("/get-phone-number", async (req, res) => {
   const { token, user_token } = req.body;
 
+  // Kiểm tra token
   if (!token) {
     return res.status(400).json({ message: "Token is required." });
   }
@@ -28,21 +30,35 @@ customerRouter.post("/get-phone-number", async (req, res) => {
   }
 
   try {
-    // Gọi API của Zalo
-    const response = await fetch(changeUrlToProxy("https://graph.zalo.me/v2.0/me/info"), {
+    // Tạo URL và headers
+    const proxyUrl = changeUrlToProxy("https://graph.zalo.me/v2.0/me/info");
+    const headers = {
+      "access_token": user_token, // Access token từ Zalo App
+      "code": token,             // Token từ FE gửi lên
+      "secret_key": SECRET_KEY,  // Secret key của Zalo App
+    };
+
+    console.log("URL gửi đến proxy:", proxyUrl);
+    console.log("Headers gửi đi:", headers);
+
+    // Gửi request qua proxy
+    const response = await fetch(proxyUrl, {
       method: "GET",
-      headers: {
-        "access_token": user_token, // Access token từ Zalo App
-        // "code": token,                      // Token từ FE gửi lên
-        // "secret_key": SECRET_KEY,    // Secret key của Zalo App
-      },
+      headers,
     });
 
+    console.log("Response status:", response.status);
+    console.log("Response headers:", response.headers);
+
+    // Kiểm tra trạng thái response
     if (!response.ok) {
+      console.error(`Zalo API error: ${response.status} - ${response.statusText}`);
       throw new Error(`Zalo API error: ${response.status} - ${response.statusText}`);
     }
 
+    // Lấy dữ liệu từ response
     const data = await response.json();
+    console.log("Dữ liệu từ API Zalo:", data);
 
     if (data) {
       res.json({ phoneNumber: data }); // Trả số điện thoại về FE
@@ -50,7 +66,7 @@ customerRouter.post("/get-phone-number", async (req, res) => {
       res.json({ message: "Phone number not found in Zalo response." });
     }
   } catch (error) {
-    console.error("Error fetching phone number from Zalo:", error.message);
+    console.error("Error fetching phone number from Zalo:", error);
     res.status(500).json({ message: "Internal server error." });
   }
 });
