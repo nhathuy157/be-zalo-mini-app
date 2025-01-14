@@ -19,13 +19,11 @@ customerRouter.post("/get-phone-number", async (req, res) => {
   const { token, user_token } = req.body;
 
   // Kiểm tra token
-  if (!token) {
-    return res.status(400).json({ message: "Token is required." });
+  if (!token || !user_token) {
+    return res.status(400).json({ message: "Token is required. " });
   }
 
-  if (!user_token) {
-    return res.status(400).json({ message: "User token is required." });
-  }
+ 
 
   try {
     // Tạo URL và headers
@@ -85,14 +83,14 @@ customerRouter.get(
 customerRouter.post(
     "/login",
     asyncHandler(async (req, res) => {
-      const { accessToken } = req.body;
-      if (!accessToken) {
+      const { accessToken, phone_number } = req.body;
+      if (!accessToken || !phone_number) {
         res.status(400);
-        throw new Error("Access token is required");
+        throw new Error("Input is required");
       }
   
       // Lấy thông tin từ Zalo
-      const { id, birthday, name, gender, picture, phone_number } = await ZaloService.getZaloProfile(accessToken);
+      const { id,name,birthday,email,picture } = await ZaloService.getZaloProfile(accessToken);
   
       // Xử lý ngày sinh
       let birthDate = null;
@@ -114,7 +112,7 @@ customerRouter.post(
           picture: pictureUrl,
           phone_number: phone_number || "N/A",
           followerId: "N/A",
-          email: "N/A",
+          email: email || "N/A",
        
         },
         { new: true, upsert: true }

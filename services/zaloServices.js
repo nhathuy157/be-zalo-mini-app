@@ -59,7 +59,7 @@ service.getZaloProfile = (accessToken) => {
                 'access_token': accessToken // Đặt AccessToken trong header
             },
             qs: {
-                fields: 'id,name,picture' // Các trường cần lấy
+                fields: 'id,name,birthday,email,picture' // Các trường cần lấy
             },
             json: true // Tự động parse JSON response
         }, (error, response, body) => {
