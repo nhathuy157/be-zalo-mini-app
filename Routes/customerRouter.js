@@ -83,8 +83,8 @@ customerRouter.get(
 customerRouter.post(
     "/login",
     asyncHandler(async (req, res) => {
-      const { accessToken, phone_number } = req.body;
-      if (!accessToken || !phone_number) {
+      const { accessToken, phoneNumber } = req.body;
+      if (!accessToken || !phoneNumber) {
         res.status(400);
         throw new Error("Input is required");
       }
@@ -110,7 +110,7 @@ customerRouter.post(
           sex: gender === "male",
           registrationDate: birthDate || new Date(),
           picture: pictureUrl,
-          phone_number: phone_number || "N/A",
+          phone_number: phoneNumber || "N/A",
           followerId: "N/A",
           email: email || "N/A",
        
