@@ -41,50 +41,96 @@ const OPEN_API_DOMAIN = 'https://openapi.zalo.me'
 //     });
 // }
 
-service.getZaloProfile = (accessToken) => {
+// service.getZaloProfile = (accessToken) => {
+//     const proxyUrl = changeUrlToProxy("https://graph.zalo.me/v2.0/me");
+//     return new Promise((resolve, reject) => {
+//         // Kiểm tra accessToken
+//         if (!accessToken) {
+//             return reject({
+//                 error: 1,
+//                 message: 'Access token is required'
+//             });
+//         }
+
+//         // Cấu hình API request
+//         request({
+//             url: proxyUrl, // Endpoint API
+//             method: 'GET', // Phương thức GET
+//             headers: {
+//                 'access_token': accessToken // Đặt AccessToken trong header
+//             },
+//             qs: {
+//                 fields: 'id,name,birthday,email,picture' // Các trường cần lấy
+//             },
+//             json: true // Tự động parse JSON response
+//         }, (error, response, body) => {
+//             if (error) {
+//                 // Xử lý lỗi kết nối hoặc lỗi khác
+//                 return reject({
+//                     error: 2,
+//                     message: 'Request failed',
+//                     detail: error
+//                 });
+//             }
+
+//             if (response.statusCode !== 200) {
+//                 // Xử lý lỗi từ API Zalo
+//                 return reject({
+//                     error: body.error || 3,
+//                     message: body.message || 'Unexpected API error'
+//                 });
+//             }
+
+//             // Trả về dữ liệu thành công
+//             resolve(body);
+//         });
+//     });
+// };
+
+service.getZaloProfile = async (accessToken) => {
     const proxyUrl = changeUrlToProxy("https://graph.zalo.me/v2.0/me");
-    return new Promise((resolve, reject) => {
-        // Kiểm tra accessToken
-        if (!accessToken) {
-            return reject({
-                error: 1,
-                message: 'Access token is required'
+
+    // Kiểm tra accessToken
+    if (!accessToken) {
+        return Promise.reject({
+            error: 1,
+            message: "Access token is required",
+        });
+    }
+
+    try {
+        // Cấu hình headers
+        const headers = {
+            "access_token": accessToken, // Đặt AccessToken trong header
+        };
+
+        // Gửi request qua proxy
+        const response = await fetch(proxyUrl + "?fields=id,name,birthday,email,picture", {
+            method: "GET",
+            headers,
+        });
+
+        // Kiểm tra status code
+        if (!response.ok) {
+            const errorBody = await response.json();
+            return Promise.reject({
+                error: errorBody.error || 3,
+                message: errorBody.message || "Unexpected API error",
             });
         }
 
-        // Cấu hình API request
-        request({
-            url: proxyUrl, // Endpoint API
-            method: 'GET', // Phương thức GET
-            headers: {
-                'access_token': accessToken // Đặt AccessToken trong header
-            },
-            qs: {
-                fields: 'id,name,birthday,email,picture' // Các trường cần lấy
-            },
-            json: true // Tự động parse JSON response
-        }, (error, response, body) => {
-            if (error) {
-                // Xử lý lỗi kết nối hoặc lỗi khác
-                return reject({
-                    error: 2,
-                    message: 'Request failed',
-                    detail: error
-                });
-            }
+        // Parse và trả về dữ liệu thành công
+        const data = await response.json();
+        return Promise.resolve(data);
 
-            if (response.statusCode !== 200) {
-                // Xử lý lỗi từ API Zalo
-                return reject({
-                    error: body.error || 3,
-                    message: body.message || 'Unexpected API error'
-                });
-            }
-
-            // Trả về dữ liệu thành công
-            resolve(body);
+    } catch (error) {
+        // Xử lý lỗi kết nối hoặc lỗi khác
+        return Promise.reject({
+            error: 2,
+            message: "Request failed",
+            detail: error.message,
         });
-    });
+    }
 };
 
 
