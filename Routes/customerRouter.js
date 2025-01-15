@@ -91,6 +91,8 @@ customerRouter.get(
   
       // Lấy thông tin từ Zalo
       const { id, name, birthday, email, picture } = await ZaloService.getZaloProfile(accessToken);
+
+      console.log("Thông tin từ Zalo:", { id, name, birthday, email, picture });
   
       // Kiểm tra zaloId (id)
       if (!id) {
