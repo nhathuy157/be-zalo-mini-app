@@ -80,7 +80,7 @@ customerRouter.get(
     })
   );
   
-customerRouter.post(
+  customerRouter.post(
     "/login",
     asyncHandler(async (req, res) => {
       const { accessToken, phoneNumber } = req.body;
@@ -90,7 +90,13 @@ customerRouter.post(
       }
   
       // Lấy thông tin từ Zalo
-      const { id,name,birthday,email,picture } = await ZaloService.getZaloProfile(accessToken);
+      const { id, name, birthday, email, picture } = await ZaloService.getZaloProfile(accessToken);
+  
+      // Kiểm tra zaloId (id)
+      if (!id) {
+        res.status(400);
+        throw new Error("Zalo ID is null or invalid. Cannot proceed.");
+      }
   
       // Xử lý ngày sinh
       let birthDate = null;
@@ -102,7 +108,7 @@ customerRouter.post(
       // Xử lý ảnh đại diện
       let pictureUrl = picture?.data?.url || picture;
   
-      
+      // Tìm kiếm hoặc cập nhật thông tin khách hàng
       const customer = await Customer.findOneAndUpdate(
         { zaloId: id },
         {
@@ -113,9 +119,8 @@ customerRouter.post(
           phone_number: phoneNumber || "N/A",
           followerId: "N/A",
           email: email || "N/A",
-       
         },
-        { new: true, upsert: true }
+        { new: true, upsert: true } // Tạo mới nếu không tìm thấy
       );
   
       // Tạo JWT token
@@ -128,6 +133,7 @@ customerRouter.post(
       });
     })
   );
+  
 
 /**
  * Get all customer
