@@ -18,6 +18,8 @@ service.getZaloProfile = (accessToken) => {
             });
         }
 
+        console.log("accessToken", accessToken);
+
         // Cấu hình API request
         request({
             url: "https://graph.zalo.me/v2.0/me", // Endpoint API
@@ -32,6 +34,7 @@ service.getZaloProfile = (accessToken) => {
         }, (error, response, body) => {
             if (error) {
                 // Xử lý lỗi kết nối hoặc lỗi khác
+                console.log("error", error);
                 return reject({
                     error: 2,
                     message: 'Request failed',
@@ -39,13 +42,18 @@ service.getZaloProfile = (accessToken) => {
                 });
             }
 
+            
+
             if (response.statusCode !== 200) {
                 // Xử lý lỗi từ API Zalo
+                console.log("response.statusCode", response.statusCode);
                 return reject({
                     error: body.error || 3,
                     message: body.message || 'Unexpected API error'
                 });
             }
+
+            console.log("body", body);  
 
             // Trả về dữ liệu thành công
             resolve(body);
