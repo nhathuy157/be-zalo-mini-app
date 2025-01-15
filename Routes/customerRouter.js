@@ -107,7 +107,7 @@ customerRouter.post(
         { zaloId: id },
         {
           name_customer: name,
-          sex: gender === "male",
+          sex: true,
           registrationDate: birthDate || new Date(),
           picture: pictureUrl,
           phone_number: phoneNumber || "N/A",
