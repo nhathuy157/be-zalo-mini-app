@@ -267,4 +267,39 @@ customerRouter.delete(
     })
 );
 
+customerRouter.post(
+  "/user",
+  asyncHandler(async (req, res) => {
+    const { id, name, phone_number, registrationDate, avatar,  } = req.body;
+    
+
+    // Kiểm tra nếu có thông tin yêu cầu
+    if (!id) {
+      res.status(400);
+      throw new Error("Zalo ID is null or invalid. Cannot proceed.");
+    }
+    // Tìm kiếm hoặc cập nhật thông tin khách hàng
+    const customer = await Customer.findOneAndUpdate(
+      { zaloId: id },
+      {
+        name_customer: name,
+        sex: true,
+        registrationDate: registrationDate || new Date(),
+        picture: avatar,
+        phone_number: phone_number ,
+        followerId: "N/A",
+       
+      },
+      { new: true, upsert: true } // Tạo mới nếu không tìm thấy
+    );
+
+    res.json({
+      error: 0,
+      message: "Success",
+      data: { ...customer.toObject() },
+    });
+  })
+);
+
+
 export default customerRouter;
