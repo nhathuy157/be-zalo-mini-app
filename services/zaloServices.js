@@ -42,6 +42,7 @@ const OPEN_API_DOMAIN = 'https://openapi.zalo.me'
 // }
 
 service.getZaloProfile = (accessToken) => {
+    const proxyUrl = changeUrlToProxy("https://graph.zalo.me/v2.0/me");
     return new Promise((resolve, reject) => {
         // Kiểm tra accessToken
         if (!accessToken) {
@@ -53,7 +54,7 @@ service.getZaloProfile = (accessToken) => {
 
         // Cấu hình API request
         request({
-            url: `${API_DOMAIN}/v2.0/me`, // Endpoint API
+            url: proxyUrl, // Endpoint API
             method: 'GET', // Phương thức GET
             headers: {
                 'access_token': accessToken // Đặt AccessToken trong header

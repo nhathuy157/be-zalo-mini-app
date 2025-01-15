@@ -11,7 +11,7 @@ const customerRouter = express.Router();
 
 
 
-function changeUrlToProxy(url) {
+export function changeUrlToProxy(url) {
   return url.replace("https://graph.zalo.me", "http://103.82.195.80:3000");
 }
 
